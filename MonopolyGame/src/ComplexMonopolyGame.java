@@ -27,8 +27,9 @@ public class ComplexMonopolyGame {
         int rentWithHotel;
         int houses;
         boolean hotel;
+        boolean isJail;
 
-        public Property(String name, int cost, int baseRent, int houseCost, int hotelCost) {
+        public Property(String name, int cost, int baseRent, int houseCost, int hotelCost, boolean isJail) {
             this.name = name;
             this.cost = cost;
             this.baseRent = baseRent;
@@ -38,13 +39,13 @@ public class ComplexMonopolyGame {
             this.rentWithHotel = baseRent * 2;
             this.houses = 0;
             this.hotel = false;
+            this.isJail = isJail;
         }
     }
 
     static final int BOARD_SIZE = 10;
     static final int GO_REWARD = 200;
     static final int MAX_HOUSES = 4;
-   // static final int MAX_HOTELS = 1;
 
     static Player[] players;
     static Property[] board;
@@ -58,8 +59,6 @@ public class ComplexMonopolyGame {
     }
 
     static void initializeGame() {
-    	
-    	
         Scanner scanner = new Scanner(System.in);
         System.out.print("Enter the number of players: ");
         int numPlayers = scanner.nextInt();
@@ -71,14 +70,13 @@ public class ComplexMonopolyGame {
             players[i] = new Player(playerName);
         }
 
-        
-        
         board = new Property[BOARD_SIZE];
-        board[0] = new Property("GO", 0, 0, 0, 0);
-        board[1] = new Property("Property 1", 100, 10, 50, 100);
+        board[0] = new Property("GO", 0, 0, 0, 0, false);
+        board[1] = new Property("Property 1", 100, 10, 50, 100, false);
+        board[2] = new Property("Jail", 0, 0, 0, 0, true);
 
-        for (int i = 4; i < BOARD_SIZE; i++) {
-            board[i] = new Property("Empty Space", 0, 0, 0, 0);
+        for (int i = 3; i < BOARD_SIZE; i++) {
+            board[i] = new Property("Empty Space", 0, 0, 0, 0, false);
         }
 
         System.out.println("Game initialized with " + numPlayers + " players.");
@@ -119,9 +117,16 @@ public class ComplexMonopolyGame {
 
     static void executeAction(Player player) {
         Property currentProperty = board[player.position];
-        if (currentProperty != null){
+
+        if (currentProperty != null) {
             System.out.println("Landed on: " + currentProperty.name);
-        }else {
+
+            if (currentProperty.isJail) {
+                System.out.println("You are in jail! Miss your next turn.");
+                player.position = (player.position + 1) % BOARD_SIZE;
+                return;
+            }
+        } else {
             System.out.println("Error: currentProperty is null at position " + player.position);
             System.out.println("Player position: " + player.position);
             System.out.println("Board size: " + BOARD_SIZE);
@@ -149,7 +154,6 @@ public class ComplexMonopolyGame {
             System.out.println("This space has no action.");
         }
 
-        
         if (checkColorSet(player)) {
             System.out.println("Congratulations! You own the entire color set. You can now build houses/hotels.");
             buildHousesHotels(player, currentProperty);
@@ -159,6 +163,7 @@ public class ComplexMonopolyGame {
     static boolean checkColorSet(Player player) {
         return player.propertiesOwned >= 3;
     }
+    
 
     static void buildHousesHotels(Player player, Property currentProperty) {
         System.out.println("Do you want to build houses/hotels? (yes/no)");
@@ -170,12 +175,10 @@ public class ComplexMonopolyGame {
             String buildOption = scanner.next();
 
             if (buildOption.equalsIgnoreCase("h") && player.money >= currentProperty.houseCost && currentProperty.houses < MAX_HOUSES) {
-            	
                 player.money -= currentProperty.houseCost;
                 currentProperty.houses++;
                 System.out.println("You built a house on " + currentProperty.name + ".");
             } else if (buildOption.equalsIgnoreCase("ht") && player.money >= currentProperty.hotelCost && !currentProperty.hotel) {
-            	
                 player.money -= currentProperty.hotelCost;
                 currentProperty.hotel = true;
                 System.out.println("You built a hotel on " + currentProperty.name + ".");
@@ -185,4 +188,3 @@ public class ComplexMonopolyGame {
         }
     }
 }
-
