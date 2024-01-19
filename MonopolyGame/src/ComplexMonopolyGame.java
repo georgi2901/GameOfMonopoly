@@ -74,10 +74,13 @@ public class ComplexMonopolyGame {
         board[0] = new Property("GO", 0, 0, 0, 0, false);
         board[1] = new Property("Property 1", 100, 10, 50, 100, false);
         board[2] = new Property("Jail", 0, 0, 0, 0, true);
-
-        for (int i = 3; i < BOARD_SIZE; i++) {
-            board[i] = new Property("Empty Space", 0, 0, 0, 0, false);
-        }
+        board[3] = new Property("Brown 2", 60, 4, 50, 100, false);
+        board[4] = new Property("Income Tax", 0, 0, 0, 0, false);
+        board[5] = new Property("Railroad 1", 200, 25, 0, 0, false);
+        board[6] = new Property("Light Blue 1", 100, 6, 50, 100, false);
+        board[7] = new Property("Chance", 0, 0, 0, 0, false);
+        board[8] = new Property("Light Blue 2", 100, 6, 50, 100, false);
+        board[9] = new Property("Light Blue 3", 120, 8, 50, 100, false);
 
         System.out.println("Game initialized with " + numPlayers + " players.");
     }
@@ -101,7 +104,14 @@ public class ComplexMonopolyGame {
                 int diceRoll = random.nextInt(6) + 1;
                 System.out.println("You rolled a " + diceRoll);
 
-                currentPlayer.position = (currentPlayer.position + diceRoll) % BOARD_SIZE;
+                int newPosition = (currentPlayer.position + diceRoll) % BOARD_SIZE;
+
+                if (newPosition < currentPlayer.position) {
+                    currentPlayer.money += GO_REWARD;
+                    System.out.println(currentPlayer.name + " completed a full circle! Collect $" + GO_REWARD + ".");
+                }
+
+                currentPlayer.position = newPosition;
 
                 executeAction(currentPlayer);
 
@@ -123,8 +133,28 @@ public class ComplexMonopolyGame {
 
             if (currentProperty.isJail) {
                 System.out.println("You are in jail! Miss your next turn.");
-                player.position = (player.position + 1) % BOARD_SIZE;
-                return;
+
+                int currentPlayerIndex = -1;
+                for (int i = 0; i < players.length; i++) {
+                    if (players[i] == player) {
+                        currentPlayerIndex = i;
+                        break;
+                    }
+                }
+
+                if (currentPlayerIndex != -1) {
+                    
+                    currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+                }
+
+                
+                while (players[currentPlayerIndex].position == -1) {
+                    currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+                }
+
+                
+                ComplexMonopolyGame.numPlayers = currentPlayerIndex;
+                return; 
             }
         } else {
             System.out.println("Error: currentProperty is null at position " + player.position);
@@ -148,8 +178,7 @@ public class ComplexMonopolyGame {
                 System.out.println("You chose not to buy " + currentProperty.name + ".");
             }
         } else if (currentProperty.name.equals("GO")) {
-            player.money += GO_REWARD;
-            System.out.println("You passed GO! Collect $" + GO_REWARD + ".");
+            System.out.println("You passed GO!");
         } else {
             System.out.println("This space has no action.");
         }
