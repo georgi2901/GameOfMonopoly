@@ -8,12 +8,21 @@ public class ComplexMonopolyGame {
         int position;
         int money;
         int propertiesOwned;
+        private boolean skipTurn = false;
 
         public Player(String name) {
             this.name = name;
             this.position = 0;
             this.money = 1000;
             this.propertiesOwned = 0;
+        }
+        
+        public boolean isSkipTurn() {
+        	return skipTurn;
+        }
+        
+        public void setSkipTurn(boolean skipTurn) {
+        	this.skipTurn = skipTurn;
         }
     }
 
@@ -75,11 +84,11 @@ public class ComplexMonopolyGame {
         board[1] = new Property("Property 1", 100, 10, 50, 100, false);
         board[2] = new Property("Jail", 0, 0, 0, 0, true);
         board[3] = new Property("Brown 2", 60, 4, 50, 100, false);
-        board[4] = new Property("Income Tax", 0, 0, 0, 0, false);
+        board[4] = new Property("Jail", 0, 0, 0, 0, true);
         board[5] = new Property("Railroad 1", 200, 25, 0, 0, false);
-        board[6] = new Property("Light Blue 1", 100, 6, 50, 100, false);
+        board[6] = new Property("Jail", 0, 0, 0, 0, true);
         board[7] = new Property("Chance", 0, 0, 0, 0, false);
-        board[8] = new Property("Light Blue 2", 100, 6, 50, 100, false);
+        board[8] = new Property("Jail", 0, 0, 0, 0, true);
         board[9] = new Property("Light Blue 3", 120, 8, 50, 100, false);
 
         System.out.println("Game initialized with " + numPlayers + " players.");
@@ -92,35 +101,41 @@ public class ComplexMonopolyGame {
         while (!gameWon) {
             Player currentPlayer = players[currentPlayerIndex];
 
-            System.out.println("\n" + currentPlayer.name + "'s turn.");
-            System.out.println("Position: " + currentPlayer.position);
-            System.out.println("Money: $" + currentPlayer.money);
-            System.out.println("Properties owned: " + currentPlayer.propertiesOwned);
-            System.out.println("Type 'roll' to roll the dice: ");
-            Scanner scanner = new Scanner(System.in);
-            String input = scanner.next();
+            if(!currentPlayer.isSkipTurn()) {
+            	System.out.println("\n" + currentPlayer.name + "'s turn.");
+                System.out.println("Position: " + currentPlayer.position);
+                System.out.println("Money: $" + currentPlayer.money);
+                System.out.println("Properties owned: " + currentPlayer.propertiesOwned);
+                System.out.println("Type 'roll' to roll the dice: ");
+                Scanner scanner = new Scanner(System.in);
+                String input = scanner.next();
 
-            if (input.equalsIgnoreCase("roll")) {
-                int diceRoll = random.nextInt(6) + 1;
-                System.out.println("You rolled a " + diceRoll);
+                if (input.equalsIgnoreCase("roll")) {
+                    int diceRoll = random.nextInt(6) + 1;
+                    System.out.println("You rolled a " + diceRoll);
 
-                int newPosition = (currentPlayer.position + diceRoll) % BOARD_SIZE;
+                    int newPosition = (currentPlayer.position + diceRoll) % BOARD_SIZE;
 
-                if (newPosition < currentPlayer.position) {
-                    currentPlayer.money += GO_REWARD;
-                    System.out.println(currentPlayer.name + " completed a full circle! Collect $" + GO_REWARD + ".");
+                    if (newPosition < currentPlayer.position) {
+                        currentPlayer.money += GO_REWARD;
+                        System.out.println(currentPlayer.name + " completed a full circle! Collect $" + GO_REWARD + ".");
+                    }
+
+                    currentPlayer.position = newPosition;
+
+                    executeAction(currentPlayer);
+
+                    currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
                 }
 
-                currentPlayer.position = newPosition;
-
-                executeAction(currentPlayer);
-
-                currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
-            }
-
-            if (numPlayers == 1) {
-                gameWon = true;
-                System.out.println("Congratulations, " + players[0].name + "! You won!");
+                if (numPlayers == 1) {
+                    gameWon = true;
+                    System.out.println("Congratulations, " + players[0].name + "! You won!");
+                }
+            }else {
+            	currentPlayer.setSkipTurn(false);
+            	 System.out.println(currentPlayer.name + " is in jail. Skips a turn!");
+            	 currentPlayerIndex++;
             }
         }
     }
@@ -133,36 +148,7 @@ public class ComplexMonopolyGame {
 
             if (currentProperty.isJail) {
                 System.out.println("You are in jail! Miss your next turn.");
-
-                int currentPlayerIndex = -1;
-                for (int i = 0; i < players.length; i++) {
-                    if (players[i] == player) {
-                        currentPlayerIndex = i;
-                        break;
-                    }
-                }
-
-                if (currentPlayerIndex != -1) {
-                    
-                    currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
-                }
-
-                
-                while (players[currentPlayerIndex].position == -1) {
-                    currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
-                }
-
-                
-                ComplexMonopolyGame.numPlayers = currentPlayerIndex;
-                return; 
-            }
-        } else {
-            System.out.println("Error: currentProperty is null at position " + player.position);
-            System.out.println("Player position: " + player.position);
-            System.out.println("Board size: " + BOARD_SIZE);
-            System.out.println("Players array length: " + players.length);
-            System.out.println("Board array length: " + board.length);
-            System.out.println("Board array contents: " + Arrays.toString(board));
+                player.setSkipTurn(true);
         }
 
         if (currentProperty.cost > 0 && !currentProperty.hotel) {
@@ -177,8 +163,6 @@ public class ComplexMonopolyGame {
             } else {
                 System.out.println("You chose not to buy " + currentProperty.name + ".");
             }
-        } else if (currentProperty.name.equals("GO")) {
-            System.out.println("You passed GO!");
         } else {
             System.out.println("This space has no action.");
         }
@@ -186,7 +170,9 @@ public class ComplexMonopolyGame {
         if (checkColorSet(player)) {
             System.out.println("Congratulations! You own the entire color set. You can now build houses/hotels.");
             buildHousesHotels(player, currentProperty);
+        } else {
         }
+		}	
     }
 
     static boolean checkColorSet(Player player) {
