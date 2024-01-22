@@ -1,4 +1,3 @@
-import java.util.Arrays;
 import java.util.Random;
 import java.util.Scanner;
 
@@ -16,13 +15,13 @@ public class ComplexMonopolyGame {
             this.money = 1000;
             this.propertiesOwned = 0;
         }
-        
+
         public boolean isSkipTurn() {
-        	return skipTurn;
+            return skipTurn;
         }
-        
+
         public void setSkipTurn(boolean skipTurn) {
-        	this.skipTurn = skipTurn;
+            this.skipTurn = skipTurn;
         }
     }
 
@@ -102,7 +101,7 @@ public class ComplexMonopolyGame {
             Player currentPlayer = players[currentPlayerIndex];
 
             if(!currentPlayer.isSkipTurn()) {
-            	System.out.println("\n" + currentPlayer.name + "'s turn.");
+                System.out.println("\n" + currentPlayer.name + "'s turn.");
                 System.out.println("Position: " + currentPlayer.position);
                 System.out.println("Money: $" + currentPlayer.money);
                 System.out.println("Properties owned: " + currentPlayer.propertiesOwned);
@@ -133,9 +132,13 @@ public class ComplexMonopolyGame {
                     System.out.println("Congratulations, " + players[0].name + "! You won!");
                 }
             }else {
-            	currentPlayer.setSkipTurn(false);
-            	 System.out.println(currentPlayer.name + " is in jail. Skips a turn!");
-            	 currentPlayerIndex++;
+                currentPlayer.setSkipTurn(false);
+                System.out.println(currentPlayer.name + " is in jail. Skips a turn!");
+                if (currentPlayerIndex==players.length-1){
+                    currentPlayerIndex=0;
+                }else {
+                    currentPlayerIndex++;
+                }
             }
         }
     }
@@ -149,36 +152,35 @@ public class ComplexMonopolyGame {
             if (currentProperty.isJail) {
                 System.out.println("You are in jail! Miss your next turn.");
                 player.setSkipTurn(true);
-        }
-
-        if (currentProperty.cost > 0 && !currentProperty.hotel) {
-            System.out.println("Do you want to buy " + currentProperty.name + " for $" + currentProperty.cost + "? (yes/no)");
-            Scanner scanner = new Scanner(System.in);
-            String input = scanner.next();
-
-            if (input.equalsIgnoreCase("yes") && player.money >= currentProperty.cost) {
-                player.money -= currentProperty.cost;
-                player.propertiesOwned++;
-                System.out.println("Congratulations! You now own " + currentProperty.name + ".");
-            } else {
-                System.out.println("You chose not to buy " + currentProperty.name + ".");
             }
-        } else {
-            System.out.println("This space has no action.");
-        }
 
-        if (checkColorSet(player)) {
-            System.out.println("Congratulations! You own the entire color set. You can now build houses/hotels.");
-            buildHousesHotels(player, currentProperty);
-        } else {
+            if (currentProperty.cost > 0 && !currentProperty.hotel) {
+                System.out.println("Do you want to buy " + currentProperty.name + " for $" + currentProperty.cost + "? (yes/no)");
+                Scanner scanner = new Scanner(System.in);
+                String input = scanner.next();
+
+                if (input.equalsIgnoreCase("yes") && player.money >= currentProperty.cost) {
+                    player.money -= currentProperty.cost;
+                    player.propertiesOwned++;
+                    System.out.println("Congratulations! You now own " + currentProperty.name + ".");
+                } else {
+                    System.out.println("You chose not to buy " + currentProperty.name + ".");
+                }
+            } else {
+                System.out.println("This space has no action.");
+            }
+
+            if (checkColorSet(player)) {
+                System.out.println("Congratulations! You own the entire color set. You can now build houses/hotels.");
+                buildHousesHotels(player, currentProperty);
+            }
         }
-		}	
     }
 
     static boolean checkColorSet(Player player) {
         return player.propertiesOwned >= 3;
     }
-    
+
 
     static void buildHousesHotels(Player player, Property currentProperty) {
         System.out.println("Do you want to build houses/hotels? (yes/no)");
